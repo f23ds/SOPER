@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 
 #include "pow.h"
 
@@ -140,13 +141,13 @@ void rounds_exec()
 		/* no se ha encontrado el valor entre todos los hilos */
 		if (value == -1)
 		{
-			fprintf(stderr, "Solution rejected: %08ld !-> %08ld\n", obj, value);
+			fprintf(stderr, "%08ld !-> %08ld\n", obj, value);
 			free(threads);
 			free(args);
 			exit(EXIT_FAILURE);
 		}
 
-		printf("Solution accepted: %08ld --> %08ld\n", obj, value);
+		printf("%08ld --> %08ld\n", obj, value);
 		obj = value;
 		value = -1;
 	}
@@ -159,6 +160,7 @@ void rounds_exec()
 
 int main(int argc, char *argv[])
 {
+	pid_t miner, monitor;
 	if (argc < 4)
 	{
 		printf("Error en los argumentos\n");
@@ -171,7 +173,37 @@ int main(int argc, char *argv[])
 
 	range = (long)(POW_LIMIT / nthreads);
 
-	rounds_exec();
+	/* Creamos el proceso minero */
+	miner = fork();
+	if (miner < 0)
+	{
+		perror("Miner exited unexpectedly");
+		exit(EXIT_FAILURE);
+	}
+	else if (miner == 0) /* Minero */
+	{
+		monitor = fork();
+		if (monitor < 0)
+		{
+			perror("Monitor exited unexpectedly");
+			exit(EXIT_FAILURE);
+		}
+		else if (monitor == 0) /* Monitor */
+		{
+			printf("KLK\n");
+		}
+		else /* Ejecución minero */
+		{
+			rounds_exec();
+			wait(NULL);
+			printf("Monitor exited with status %d\n", WIFEXITED(monitor));
+		}
+	}
+	else /* Principal */
+	{	
+		wait(NULL);
+		printf("Miner exited with status %d\n", WIFEXITED(miner));
+	}
 
 	exit(EXIT_SUCCESS);
 }

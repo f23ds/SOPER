@@ -3,9 +3,9 @@
 # It is assumed that the name of the source files is exercise1.c, exercise2.c,...,exercise.h
 #-----------------------
 
-CC = gcc -ansi -pedantic
+CC = gcc -ansi -pedantic -pthread
 CFLAGS = -Wall
-EXE = miner
+EXE = mrush
 
 all : $(EXE) clear
 
@@ -17,12 +17,12 @@ clear:
 clean :
 	rm -f *.o core $(EXE)
 
-$(EXE) : % : %.o pow.o
+$(EXE) : % : %.o pow.o 
 	@echo "#---------------------------"
 	@echo "# Generating $@ "
 	@echo "# Depepends on $^"
 	@echo "# Has changed $<"
-	$(CC) $(CFLAGS) -o $@ $@.o pow.o
+	$(CC) $(CFLAGS) -o $@ $@.o pow.o 
 
 pow.o : pow.c pow.h
 	@echo "#---------------------------"
@@ -33,5 +33,5 @@ pow.o : pow.c pow.h
 
 run:
 	@echo running main
-	@./miner 5 10 20
-## -nrounds -nthreads -objective
+	@./mrush 0 5 3
+## -objective -nrounds -nthreads
