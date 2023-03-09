@@ -8,9 +8,18 @@
  * @copyright Copyright (c) 2023
  */
 
-#ifndef  _MONITOR_H
+#ifndef _MONITOR_H
 #define _MONITOR_H
 
-void monitor();
+#include "types.h"
+
+/**
+ * @brief inicializa un objeto
+ * @author Felix Lopez Laria
+ *
+ * @param id id del objeto
+ * @return objeto inicializado
+ */
+void monitor_exec(int *fd1, int *fd2, int nrounds);
 
 #endif

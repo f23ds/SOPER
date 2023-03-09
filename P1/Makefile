@@ -17,12 +17,12 @@ clear:
 clean :
 	rm -f *.o core $(EXE)
 
-$(EXE) : % : %.o pow.o 
+$(EXE) : % : %.o pow.o miner.o monitor.o
 	@echo "#---------------------------"
 	@echo "# Generating $@ "
 	@echo "# Depepends on $^"
 	@echo "# Has changed $<"
-	$(CC) $(CFLAGS) -o $@ $@.o pow.o 
+	$(CC) $(CFLAGS) -o $@ $@.o pow.o miner.o monitor.o
 
 pow.o : pow.c pow.h
 	@echo "#---------------------------"
@@ -31,13 +31,13 @@ pow.o : pow.c pow.h
 	@echo "# Has changed $<"
 	$(CC) $(CFLAGS) -c $<
 
-minero.o : minero.c minero.h
+miner.o : miner.c miner.h
 	@echo "#---------------------------"
 	@echo "# Generating $@ "
 	@echo "# Depepends on $^"
 	@echo "# Has changed $<"
 	$(CC) $(CFLAGS) -c $<
-
+	
 monitor.o : monitor.c monitor.h
 	@echo "#---------------------------"
 	@echo "# Generating $@ "

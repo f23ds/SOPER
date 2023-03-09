@@ -4,9 +4,9 @@
  * @brief Monitor functions implementation
  * @version 0.1
  * @date 2023-03-09
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #include <pthread.h>
@@ -17,16 +17,53 @@
 #include <unistd.h>
 
 #include "pow.h"
-#include "mrush.h"
+#include "types.h"
 
-int monitor_exec(int *fd1, int *fd2) {
-    int fd1[2], fd2[2], status; 
-    pid_t pid;
+void monitor_exec(int *fd1, int *fd2, int nrounds)
+{
     ssize_t nbytes;
+    int i;
+    long int obj, value;
+    STATUS status;
 
-    /* Creamos la primera tubería, de minero a monitor */
-    status = pipe(fd1);
-    if (status == -1) {
-        perror("Error creando la primera tubería.");
+    /* Cerramos los canales de las pipes pertinentes */
+    close(fd1[1]);
+    close(fd2[0]);
+
+    for (i = 0; i < nrounds; i++)
+    {
+        status = REJECTED;
+        /* Leemos el valor objetivo de miner */
+        nbytes = read(fd1[0], &obj, sizeof(long int));
+        if (nbytes == -1)
+        {
+            perror("Reading error in monitor.");
+            exit(EXIT_FAILURE);
+        }
+
+        /* Leemos la solución encontrada por el miner */
+        nbytes = read(fd1[0], &value, sizeof(long int));
+        if (nbytes == -1)
+        {
+            perror("Reading error in monitor.");
+            exit(EXIT_FAILURE);
+        }
+
+        if (pow_hash(value) == obj)
+        {
+            status = ACCEPTED;
+        }
+
+        /* Ahora escribimos la solución */
+        nbytes = write(fd2[1], &status, sizeof(STATUS));
+        if (nbytes == -1)
+        {
+            perror("Write error in monitor.");
+            exit(EXIT_FAILURE);
+        }
     }
-}   
+
+    close(fd1[0]);
+    close(fd2[1]);
+
+}

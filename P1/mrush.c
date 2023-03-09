@@ -14,7 +14,6 @@ int main(int argc, char *argv[])
 	pid_t pid1, pid2;
 	int wstatus, pstatus, fd1[2], fd2[2];
 	int obj, nrounds, nthreads, range;
-	ssize_t nbytes;
 
 	if (argc < 4)
 	{
@@ -35,24 +34,26 @@ int main(int argc, char *argv[])
 		wait(&wstatus);
 		if (WIFEXITED(wstatus))
 		{
-			printf("Miner exited with status %d\n", WIFEXITED(wstatus));
+			fprintf(stdout, "Miner exited with status %d\n", WEXITSTATUS(wstatus));
 		}
 		else
 		{
-			printf("Miner exited with status %d\n", WIFEXITSTATUS(wstatus));
+			fprintf(stderr, "Miner exited unexpectedly\n");
 		}
 	}
 	else if (pid1 == 0) /* Minero */
 	{
 		/* Creamos las tuberías antes del siguiente fork para comunicar ambos procesos */
 		pstatus = pipe(fd1);
-		if (pstatus == -1) {
+		if (pstatus == -1)
+		{
 			perror("Pipe creation error");
 			exit(EXIT_FAILURE);
 		}
 
 		pstatus = pipe(fd2);
-		if (pstatus == -1) {
+		if (pstatus == -1)
+		{
 			perror("Pipe creation error");
 			exit(EXIT_FAILURE);
 		}
@@ -60,32 +61,30 @@ int main(int argc, char *argv[])
 		pid2 = fork();
 		if (pid2 > 0)
 		{
-			rounds_exec(obj, nthreads, nrounds, range);
-			
-
+			rounds_exec(obj, nthreads, nrounds, range, fd1, fd2);
 			wait(&wstatus);
 			if (WIFEXITED(wstatus))
 			{
-				printf("Monitor exited with status %d\n", WIFEXITED(wstatus));
+				fprintf(stdout, "Monitor exited with status %d\n", WEXITSTATUS(wstatus));
 			}
 			else
 			{
-				printf("Monitor exited with status %d\n", WIFEXITSTATUS(wstatus));
+				fprintf(stderr, "Monitor exited unexpectedly\n");
 			}
 		}
 		else if (pid2 == 0)
 		{
-			printf("KLK\n");
+			monitor_exec(fd1, fd2, nrounds);
 		}
 		else
 		{
-			perror("Monitor exited unexpectedly");
+			perror("fork");
 			exit(EXIT_FAILURE);
 		}
 	}
 	else
 	{
-		perror("Miner exited unexpectedly");
+		perror("fork");
 		exit(EXIT_FAILURE);
 	}
 

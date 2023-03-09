@@ -8,7 +8,7 @@
 #include "monitor.h"
 
 /* VARIABLES GLOBALES */
-long value = -1;	/* almacena el valor encontrado */
+long solution = -1; /* almacena el valor encontrado */
 long nrounds = -1;	/* almacena el numero de rounds */
 long nthreads = -1; /* almacena el numero de hilos */
 long obj = -1;		/* almacena el objetivo actual */
@@ -72,11 +72,11 @@ void *hash_search(void *args)
 	/* CASTING DEL ARGUMENTO */
 	a = (Args *)args;
 
-	for (i = a->first; i < a->last && value == -1; i++)
+	for (i = a->first; i < a->last && solution == -1; i++)
 	{
 		if (pow_hash(i) == obj)
 		{
-			value = i;
+			solution = i;
 		}
 	}
 
@@ -114,8 +114,8 @@ void multi_thread(void *threads, void *args)
 		if (error != 0)
 		{
 			fprintf(stderr, "Error creando hilo");
-			free(ts);
-			free(as);
+			free(threads);
+			free(args);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -124,32 +124,93 @@ void multi_thread(void *threads, void *args)
 }
 
 /* ejecuta el numero de rondas */
-void rounds_exec()
+void rounds_exec(int objv, int nthreadsv, int nroundsv, int rangev, int *fd1, int *fd2)
 {
 	pthread_t *threads; /* array de hilos */
 	Args *args;			/* array de argumentos para cada hilo */
 	int i;
+	ssize_t nbytes;
+	STATUS status;
 
+	/* Cerramos los canales de las pipes pertinentes */
+	close(fd1[0]);
+	close(fd2[1]);
+
+	/*inicializa variables globales */
+	obj = objv;
+	nthreads = nthreadsv;
+	nrounds = nroundsv;
+	range = rangev;
+
+	/* inicializa los hilos y los argumentos correspondientes a cada hilo */
 	threads = threads_init();
+	if (threads == NULL)
+	{
+		perror("Allocating error miner.");
+		free(threads);
+		exit(EXIT_FAILURE);
+	}
+	
 	args = args_init();
+	if (threads == NULL)
+	{
+		perror("Allocating error miner.");
+		free(threads);
+		free(args);
+		exit(EXIT_FAILURE);
+	}
 
 	for (i = 0; i < nrounds; i++)
 	{
-		multi_thread(threads, args);
-
-		/* no se ha encontrado el valor entre todos los hilos */
-		if (value == -1)
+		/* Realizamos la primera escritura del objetivo a buscar */
+		nbytes = write(fd1[1], &obj, sizeof(long int));
+		if (nbytes == -1)
 		{
-			fprintf(stderr, "%08ld !-> %08ld\n", obj, value);
+			perror("Writing error in miner.");
 			free(threads);
 			free(args);
 			exit(EXIT_FAILURE);
 		}
 
-		printf("%08ld --> %08ld\n", obj, value);
-		obj = value;
-		value = -1;
+		/* Computamos las soluciones */
+		multi_thread(threads, args);
+
+		/* Realizamos la segunda escritura con la solución encontrada */
+		nbytes = write(fd1[1], &solution, sizeof(long int));
+		if (nbytes == -1)
+		{
+			perror("Writing error in miner.");
+			free(threads);
+			free(args);
+			exit(EXIT_FAILURE);
+		}
+
+		nbytes = read(fd2[0], &status, sizeof(STATUS));
+		if (nbytes == -1)
+		{
+			perror("Reading error in miner.");
+			free(threads);
+			free(args);
+			exit(EXIT_FAILURE);
+		}
+
+		if (status == REJECTED)
+		{
+			printf("Solution rejected: %08ld --> %08ld\n", obj, solution);
+			free(threads);
+			free(args);
+			exit(EXIT_FAILURE);
+		}
+
+		printf("Solution accepted: %08ld --> %08ld\n", obj, solution);
+
+		obj = solution;
+		solution = -1;
 	}
+
+	/* Cerramos */
+	close(fd1[1]);
+	close(fd2[0]);
 
 	free(threads);
 	free(args);
