@@ -9,7 +9,6 @@
 
 /* VARIABLES GLOBALES */
 long solution = -1; /* almacena el valor encontrado */
-long nrounds = -1;	/* almacena el numero de rounds */
 long nthreads = -1; /* almacena el numero de hilos */
 long obj = -1;		/* almacena el objetivo actual */
 int range = -1;		/* almacena el tamaño en el que busca cada hilo */
@@ -47,9 +46,12 @@ Args *args_init()
 		return NULL;
 	}
 
+
 	for (i = 0; i < nthreads; i++)
 	{
 		args[i].first = i * range;
+		
+		/* el ultimo hilo busca hasta el limite  */
 		if (i == nthreads-1)
 		{
 			args[i].last = POW_LIMIT;
@@ -72,6 +74,7 @@ void *hash_search(void *args)
 	/* CASTING DEL ARGUMENTO */
 	a = (Args *)args;
 
+	/* busca el objetivo */
 	for (i = a->first; i < a->last && solution == -1; i++)
 	{
 		if (pow_hash(i) == obj)
@@ -139,7 +142,6 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 	/*inicializa variables globales */
 	obj = objv;
 	nthreads = nthreadsv;
-	nrounds = nroundsv;
 	range = (long)(POW_LIMIT / nthreads);
 
 	/* inicializa los hilos y los argumentos correspondientes a cada hilo */
@@ -160,7 +162,7 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 		exit(EXIT_FAILURE);
 	}
 
-	for (i = 0; i < nrounds; i++)
+	for (i = 0; i < nroundsv; i++)
 	{
 		/* Realizamos la primera escritura del objetivo a buscar */
 		nbytes = write(fd1[1], &obj, sizeof(long int));
@@ -185,6 +187,7 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 			exit(EXIT_FAILURE);
 		}
 
+		/* leemos la respuesta del monitor */
 		nbytes = read(fd2[0], &status, sizeof(STATUS));
 		if (nbytes == -1)
 		{
@@ -194,6 +197,7 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 			exit(EXIT_FAILURE);
 		}
 
+		/* comprobar si los datos han coincidido */
 		if (status == REJECTED)
 		{
 			printf("Solution rejected: %08ld --> %08ld\n", obj, solution);
@@ -204,6 +208,7 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 
 		printf("Solution accepted: %08ld --> %08ld\n", obj, solution);
 
+		/* actualiza el nuevo objetivo */
 		obj = solution;
 		solution = -1;
 	}

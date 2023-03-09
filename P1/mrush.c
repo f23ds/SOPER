@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	/* leer los datos pasados como argumento por el usuario */
 	obj = atol(argv[1]);
 	nrounds = atoi(argv[2]);
 	nthreads = atoi(argv[3]);

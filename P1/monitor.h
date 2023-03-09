@@ -14,14 +14,13 @@
 #include "types.h"
 
 /**
- * @brief inicializa un objeto
+ * @brief ejecuta el monitor. Por cada ronda: lee los datos recibidos del minero, compara y devuelve una respuest al minero (por tuberia)
  * @author Fabio Desio and Álvaro de Santos
  *
- * @param fd1
-  * @param fd1
-
- 
- * @return objeto inicializado
+ * @param fd1 tuberia para recibir datos
+ * @param fd2 tuberia para enviar datos
+ * @param nrounds numero de rondas a ejecutar
+ * @return void
  */
 void monitor_exec(int *fd1, int *fd2, int nrounds);
 
