@@ -31,6 +31,20 @@ pow.o : pow.c pow.h
 	@echo "# Has changed $<"
 	$(CC) $(CFLAGS) -c $<
 
+minero.o : minero.c minero.h
+	@echo "#---------------------------"
+	@echo "# Generating $@ "
+	@echo "# Depepends on $^"
+	@echo "# Has changed $<"
+	$(CC) $(CFLAGS) -c $<
+
+monitor.o : monitor.c monitor.h
+	@echo "#---------------------------"
+	@echo "# Generating $@ "
+	@echo "# Depepends on $^"
+	@echo "# Has changed $<"
+	$(CC) $(CFLAGS) -c $<
+
 run:
 	@echo running main
 	@./mrush 0 5 3
