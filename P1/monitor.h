@@ -15,9 +15,12 @@
 
 /**
  * @brief inicializa un objeto
- * @author Felix Lopez Laria
+ * @author Fabio Desio and Álvaro de Santos
  *
- * @param id id del objeto
+ * @param fd1
+  * @param fd1
+
+ 
  * @return objeto inicializado
  */
 void monitor_exec(int *fd1, int *fd2, int nrounds);

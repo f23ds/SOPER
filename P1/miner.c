@@ -50,7 +50,7 @@ Args *args_init()
 	for (i = 0; i < nthreads; i++)
 	{
 		args[i].first = i * range;
-		if (i == nthreads)
+		if (i == nthreads-1)
 		{
 			args[i].last = POW_LIMIT;
 		}
@@ -124,7 +124,7 @@ void multi_thread(void *threads, void *args)
 }
 
 /* ejecuta el numero de rondas */
-void rounds_exec(int objv, int nthreadsv, int nroundsv, int rangev, int *fd1, int *fd2)
+void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 {
 	pthread_t *threads; /* array de hilos */
 	Args *args;			/* array de argumentos para cada hilo */
@@ -140,7 +140,7 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int rangev, int *fd1, in
 	obj = objv;
 	nthreads = nthreadsv;
 	nrounds = nroundsv;
-	range = rangev;
+	range = (long)(POW_LIMIT / nthreads);
 
 	/* inicializa los hilos y los argumentos correspondientes a cada hilo */
 	threads = threads_init();

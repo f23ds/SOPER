@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 {
 	pid_t pid1, pid2;
 	int wstatus, pstatus, fd1[2], fd2[2];
-	int obj, nrounds, nthreads, range;
+	int obj, nrounds, nthreads;
 
 	if (argc < 4)
 	{
@@ -24,8 +24,6 @@ int main(int argc, char *argv[])
 	obj = atol(argv[1]);
 	nrounds = atoi(argv[2]);
 	nthreads = atoi(argv[3]);
-
-	range = (long)(POW_LIMIT / nthreads);
 
 	/* Creamos el proceso minero */
 	pid1 = fork();
@@ -61,7 +59,7 @@ int main(int argc, char *argv[])
 		pid2 = fork();
 		if (pid2 > 0)
 		{
-			rounds_exec(obj, nthreads, nrounds, range, fd1, fd2);
+			rounds_exec(obj, nthreads, nrounds, fd1, fd2);
 			wait(&wstatus);
 			if (WIFEXITED(wstatus))
 			{
