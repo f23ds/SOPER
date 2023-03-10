@@ -48,7 +48,7 @@ void monitor_exec(int *fd1, int *fd2, int nrounds)
             exit(EXIT_FAILURE);
         }
 
-        if (pow_hash(value) != obj)
+        if (pow_hash(value) == obj)
         {
             printf("Solution accepted: %08ld --> %08ld\n", obj, value);
             status = ACCEPTED;
