@@ -200,7 +200,7 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 		/* comprobar si los datos han coincidido */
 		if (status == REJECTED)
 		{
-			printf("Solution rejected: %08ld --> %08ld\n", obj, solution);
+			printf("Solution rejected: %08ld !-> %08ld\n", obj, solution);
 			free(threads);
 			free(args);
 			exit(EXIT_FAILURE);
