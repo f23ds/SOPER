@@ -63,8 +63,9 @@ void multi_thread(void *threads, void *args);
  * @param nroundsv numero de rondas a ejecutar
  * @param fd1 tuberia para enviar datos 
  * @param fd2 tuberia para recibir datos
+ * @param solst puntero para comprobar la solución y salir
  * @return void
  */
-void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2);
+void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2, STATUS *solst);
 
 #endif

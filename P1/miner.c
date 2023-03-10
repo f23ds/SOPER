@@ -46,13 +46,12 @@ Args *args_init()
 		return NULL;
 	}
 
-
 	for (i = 0; i < nthreads; i++)
 	{
 		args[i].first = i * range;
-		
+
 		/* el ultimo hilo busca hasta el limite  */
-		if (i == nthreads-1)
+		if (i == nthreads - 1)
 		{
 			args[i].last = POW_LIMIT;
 		}
@@ -127,13 +126,12 @@ void multi_thread(void *threads, void *args)
 }
 
 /* ejecuta el numero de rondas */
-void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
+void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2, STATUS *solst)
 {
 	pthread_t *threads; /* array de hilos */
 	Args *args;			/* array de argumentos para cada hilo */
 	int i;
 	ssize_t nbytes;
-	STATUS status;
 
 	/* Cerramos los canales de las pipes pertinentes */
 	close(fd1[0]);
@@ -149,26 +147,34 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 	if (threads == NULL)
 	{
 		perror("Allocating error miner.");
+		close(fd1[1]);
+		close(fd2[0]);
 		free(threads);
 		exit(EXIT_FAILURE);
 	}
-	
+
 	args = args_init();
 	if (threads == NULL)
 	{
 		perror("Allocating error miner.");
+		close(fd1[1]);
+		close(fd2[0]);
 		free(threads);
 		free(args);
 		exit(EXIT_FAILURE);
 	}
 
-	for (i = 0; i < nroundsv; i++)
+	*solst = ACCEPTED;
+
+	for (i = 0; i < nroundsv && (*solst) == ACCEPTED; i++)
 	{
 		/* Realizamos la primera escritura del objetivo a buscar */
 		nbytes = write(fd1[1], &obj, sizeof(long int));
 		if (nbytes == -1)
 		{
 			perror("Writing error in miner.");
+			close(fd1[1]);
+			close(fd2[0]);
 			free(threads);
 			free(args);
 			exit(EXIT_FAILURE);
@@ -182,31 +188,24 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 		if (nbytes == -1)
 		{
 			perror("Writing error in miner.");
+			close(fd1[1]);
+			close(fd2[0]);
 			free(threads);
 			free(args);
 			exit(EXIT_FAILURE);
 		}
 
 		/* leemos la respuesta del monitor */
-		nbytes = read(fd2[0], &status, sizeof(STATUS));
+		nbytes = read(fd2[0], solst, sizeof(STATUS));
 		if (nbytes == -1)
 		{
 			perror("Reading error in miner.");
+			close(fd1[1]);
+			close(fd2[0]);
 			free(threads);
 			free(args);
 			exit(EXIT_FAILURE);
 		}
-
-		/* comprobar si los datos han coincidido */
-		if (status == REJECTED)
-		{
-			printf("Solution rejected: %08ld !-> %08ld\n", obj, solution);
-			free(threads);
-			free(args);
-			exit(EXIT_FAILURE);
-		}
-
-		printf("Solution accepted: %08ld --> %08ld\n", obj, solution);
 
 		/* actualiza el nuevo objetivo */
 		obj = solution;
@@ -219,6 +218,4 @@ void rounds_exec(int objv, int nthreadsv, int nroundsv, int *fd1, int *fd2)
 
 	free(threads);
 	free(args);
-
-	return;
 }

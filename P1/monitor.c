@@ -24,15 +24,14 @@ void monitor_exec(int *fd1, int *fd2, int nrounds)
     ssize_t nbytes;
     int i;
     long int obj, value;
-    STATUS status;
+    STATUS status = ACCEPTED;
 
     /* Cerramos los canales de las pipes pertinentes */
     close(fd1[1]);
     close(fd2[0]);
 
-    for (i = 0; i < nrounds; i++)
+    for (i = 0; i < nrounds && status == ACCEPTED; i++) 
     {
-        status = REJECTED;
         /* Leemos el valor objetivo de miner */
         nbytes = read(fd1[0], &obj, sizeof(long int));
         if (nbytes == -1)
@@ -49,9 +48,13 @@ void monitor_exec(int *fd1, int *fd2, int nrounds)
             exit(EXIT_FAILURE);
         }
 
-        if (pow_hash(value) == obj)
+        if (pow_hash(value) != obj)
         {
+            printf("Solution accepted: %08ld --> %08ld\n", obj, value);
             status = ACCEPTED;
+        } else {
+            printf("Solution rejected: %08ld !-> %08ld\n", obj, value);
+            status = REJECTED;
         }
 
         /* Ahora escribimos la solución */
@@ -66,4 +69,5 @@ void monitor_exec(int *fd1, int *fd2, int nrounds)
     close(fd1[0]);
     close(fd2[1]);
 
+    exit(EXIT_SUCCESS);
 }
