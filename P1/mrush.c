@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
 	/* leer los datos pasados como argumento por el usuario */
 	obj = atol(argv[1]);
-	if (obj < 0 || obj > POW_LIMIT)
+	if (obj < 0 || obj >= POW_LIMIT)
 	{
 		fprintf(stderr, "El objetivo inicial debe estar entre 0 y POW_LIMIT - 1.\n");
 		exit(EXIT_FAILURE);
